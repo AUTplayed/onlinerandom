@@ -1,0 +1,14 @@
+#slotmachine {
+    float:left;
+    margin-left: 10px;
+    margin-top: 15px;
+    transition: height 1s;
+}
+
+#pointer {
+    float:left;
+}
+
+#roll {
+    float:right;
+}
