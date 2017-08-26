@@ -20,7 +20,7 @@ app.get('/:code', function (req, res) {
     }
 });
 
-app.ws("/:code", function (ws, req) {
+app.ws("/ws/:code", function (ws, req) {
     var code = req.params.code;
     if (users[code] === undefined) {
         users[code] = [];
@@ -79,4 +79,4 @@ function setChoices(code, command) {
 
 }
 
-app.listen(process.env.PORT || 8080);
+app.listen(process.env.PORT || 6003);

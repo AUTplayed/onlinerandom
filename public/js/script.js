@@ -41,7 +41,7 @@ $(document).ready(function () {
 });
 
 function connectWS() {
-    ws = new WebSocket("ws://" + location.host + "/" + code);
+    ws = new WebSocket("ws://" + location.host + "/ws/" + code);
     ws.onmessage = processCommand;
     ws.onopen = sendChoices;
 }
