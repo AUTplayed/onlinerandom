@@ -104,5 +104,6 @@ function animateResult() {
     },1000);
     setTimeout(function () {
         machine.stop();
+        $("#roll").prop("disabled", false);
     }, 5000);
 }
