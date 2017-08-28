@@ -73,7 +73,7 @@ function processCommand(msg) {
 
 function setChoices(command) {
     command = command.split(";");
-    processLargeArrayAsync(command, (choice)=>{
+    processLargeArrayAsync(command, function (choices) {
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         choices.push(choice);
@@ -107,9 +107,8 @@ function animateResult() {
     }, 5000);
 }
 
-function processLargeArrayAsync(array, fn, done, maxTimePerChunk, context) {
-    context = context || window;
-    maxTimePerChunk = maxTimePerChunk || 200;
+function processLargeArrayAsync(array, callback, done) {
+    maxTimePerChunk = 200;
     var index = 0;
 
     function now() {
@@ -119,9 +118,7 @@ function processLargeArrayAsync(array, fn, done, maxTimePerChunk, context) {
     function doChunk() {
         var startTime = now();
         while (index < array.length && (now() - startTime) <= maxTimePerChunk) {
-            // callback called with args (value, index, array)
-            fn.call(context, array[index], index, array);
-            ++index;
+            callback(array[index++]);
         }
         if (index < array.length) {
             // set Timeout for async iteration
