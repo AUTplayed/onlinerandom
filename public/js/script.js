@@ -73,14 +73,13 @@ function processCommand(msg) {
 
 function setChoices(command) {
     command = command.split(";");
-    command.forEach(function (choice) {
+    processLargeArrayAsync(command, (choice)=>{
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         choices.push(choice);
-        $("#slotmachine").append("<div>" + choice + "</div>")
+        $("#slotmachine").append("<div>" + choice + "</div>");
     });
     initSlotmachine();
-
 }
 
 function initSlotmachine() {
@@ -106,4 +105,28 @@ function animateResult() {
         machine.stop();
         $("#roll").prop("disabled", false);
     }, 5000);
+}
+
+function processLargeArrayAsync(array, fn, done, maxTimePerChunk, context) {
+    context = context || window;
+    maxTimePerChunk = maxTimePerChunk || 200;
+    var index = 0;
+
+    function now() {
+        return new Date().getTime();
+    }
+
+    function doChunk() {
+        var startTime = now();
+        while (index < array.length && (now() - startTime) <= maxTimePerChunk) {
+            // callback called with args (value, index, array)
+            fn.call(context, array[index], index, array);
+            ++index;
+        }
+        if (index < array.length) {
+            // set Timeout for async iteration
+            setTimeout(doChunk, 1);
+        } else done ? done() : null;
+    }
+    doChunk();
 }
