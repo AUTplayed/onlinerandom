@@ -25,13 +25,14 @@ app.ws("/ws/:code", function (ws, req) {
     if (users[code] === undefined) {
         users[code] = [];
         setTimeout(function () { clearData(code); }, 1000 * 60 * 60);
+    } else {
+        users[code].push(ws);
+        sendAll(code, "j:" + (users[code].length - 1));
     }
 
     if (choices[code] != undefined) {
         ws.send(sendChoices(code));
     }
-    users[code].push(ws);
-    sendAll(code, "j:" + (users[code].length - 1));
 
     ws.on("message", function (msg) {
         var command = msg.split(":");

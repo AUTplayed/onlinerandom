@@ -26,11 +26,7 @@ $(document).ready(function () {
         }
         $.get("/code", function (res) {
             code = res;
-            $("#code").val(location.origin + "/" + code);
-            $("#code").show();
-            $("#choices-wrapper").hide();
             connectWS();
-            $("#random-wrapper").show();
         });
     });
 
@@ -49,7 +45,7 @@ function connectWS() {
 function sendChoices() {
     if(strChoices && strChoices != "") {
         ws.send(strChoices);
-        setChoices(strChoices.split(":")[1]);
+        location.pathname = code;
     }
 }
 
