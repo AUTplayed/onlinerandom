@@ -47,8 +47,10 @@ function connectWS() {
 }
 
 function sendChoices() {
-    ws.send(strChoices);
-    setChoices(strChoices.split(":")[1]);
+    if(strChoices && strChoices != "") {
+        ws.send(strChoices);
+        setChoices(strChoices.split(":")[1]);
+    }
 }
 
 function setJoiners(amount) {
