@@ -75,7 +75,7 @@ function processCommand(msg) {
 
 function setChoices(command) {
     command = command.split(";");
-    processLargeArrayAsync(command, function (choices) {
+    processLargeArrayAsync(command, function (choice) {
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         choices.push(choice);
@@ -113,13 +113,9 @@ function processLargeArrayAsync(array, callback, done) {
     maxTimePerChunk = 200;
     var index = 0;
 
-    function now() {
-        return new Date().getTime();
-    }
-
     function doChunk() {
-        var startTime = now();
-        while (index < array.length && (now() - startTime) <= maxTimePerChunk) {
+        var startTime = Date.now();
+        while (index < array.length && (Date.now() - startTime) <= maxTimePerChunk) {
             callback(array[index++]);
         }
         if (index < array.length) {
