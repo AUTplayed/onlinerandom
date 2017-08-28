@@ -13,7 +13,7 @@ var choices = [];
 app.use(express.static(__dirname + '/public'));
 
 app.get('/:code', function (req, res) {
-    if(req.params.code == "code") {
+    if (req.params.code == "code") {
         res.send(crypto.randomBytes(5).toString('hex'));
     } else {
         res.sendFile(path.join(__dirname + '/public/index.html'));
@@ -24,6 +24,7 @@ app.ws("/ws/:code", function (ws, req) {
     var code = req.params.code;
     if (users[code] === undefined) {
         users[code] = [];
+        setTimeout(function () { clearData(code); }, 1000 * 60 * 60);
     }
 
     if (choices[code] != undefined) {
@@ -78,5 +79,16 @@ function setChoices(code, command) {
     });
 
 }
+
+function clearData(code) {
+    delete choices[code];
+    if (users[code]) {
+        users[code].forEach(function (user) {
+            user.terminate();
+        });
+        delete users[code];
+    }
+}
+
 
 app.listen(process.env.PORT || 6003);
