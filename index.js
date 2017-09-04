@@ -27,22 +27,30 @@ app.ws("/ws/:code", function (ws, req) {
         setTimeout(function () { clearData(code); }, 1000 * 60 * 60);
     } else {
         users[code].push(ws);
-        sendAll(code, "j:" + (users[code].length - 1));
+        sendJoined(code);
     }
-
     if (choices[code] != undefined) {
-        ws.send(sendChoices(code));
+        sendChoices(code,ws);
     }
 
     ws.on("message", function (msg) {
-        var command = msg.split(":");
-        if (command.length < 2 || command.length > 2) return;
-        switch (command[0]) {
+        try {
+            msg = JSON.parse(msg);
+        } catch (e) {
+            console.log("error with msg: ", msg);
+            sendError(e.message, ws);
+            return;
+        }
+        if (!msg.type || !msg.value) {
+            sendError("Message has to include type and value", ws);
+            return;
+        }
+        switch (msg.type) {
             case "r":
-                sendAll(code, "r:" + generateRandom(code));
+                sendRandom(code);
                 break;
             case "c":
-                setChoices(code, command[1]);
+                if (!setChoices(code, msg.value)) sendError("choices can't be empty", ws);
                 break;
         }
     });
@@ -50,35 +58,48 @@ app.ws("/ws/:code", function (ws, req) {
 
 function sendAll(code, msg) {
     users[code].forEach(function (user) {
-        user.send(msg);
+        user.send(JSON.stringify(msg));
     });
+}
+
+function sendRandom(code) {
+    var msg = { type: "r" };
+    msg.value = generateRandom(code);
+    sendAll(code, msg);
 }
 
 function generateRandom(code) {
-    var random = Math.floor(Math.random() * choices[code].length);
-    return choices[code][random];
+    var random = Math.floor(Math.random() * choices[code].choices.length);
+    return choices[code].choices[random];
 }
 
-function sendChoices(code) {
-    var str = "c:";
-    if (choices[code]) {
-        for (var i = 0; i < choices[code].length; i++) {
-            str += choices[code][i];
-            if (i < choices[code].length - 1) {
-                str += ";";
-            }
-        }
+function sendError(e, ws) {
+    var res = { type: "e", value: e };
+    ws.send(JSON.stringify(res));
+}
+
+function sendChoices(code, ws) {
+    var msg = { type: "c" };
+    if (!choices[code] || !choices[code].choices || choices[code].choices.length < 1) {
+        sendError("choices are empty", ws);
+        return;
     }
-    return str;
+    msg.value = choices[code];
+    ws.send(JSON.stringify(msg));
 }
 
-function setChoices(code, command) {
-    choices[code] = [];
-    var receivedChoices = command.split(";");
-    receivedChoices.forEach(function (choice) {
-        choices[code].push(choice);
-    });
+function sendJoined(code) {
+    var msg = { type: "j" };
+    msg.value = users[code].length - 1;
+    sendAll(code, msg);
+}
 
+function setChoices(code, receivedChoices) {
+    if (!receivedChoices.choices || receivedChoices.choices.length < 1) {
+        return false;
+    }
+    choices[code] = receivedChoices;
+    return true;
 }
 
 function clearData(code) {
@@ -90,6 +111,5 @@ function clearData(code) {
         delete users[code];
     }
 }
-
 
 app.listen(process.env.PORT || 6003);

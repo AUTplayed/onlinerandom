@@ -1,12 +1,12 @@
 var code;
 var choices = [];
+var title;
 var result;
 var machine;
-var strChoices;
 var ws;
 
 $(document).ready(function () {
-    if(location.pathname == "/") {
+    if (location.pathname == "/") {
         $("#choices-wrapper").show();
     } else {
         $("#random-wrapper").show();
@@ -15,38 +15,41 @@ $(document).ready(function () {
     }
 
     $("#send-choices").click(function () {
-        var inChoices = $("#choices").val();
-        inChoices = inChoices.split("\n");
-        strChoices = "c:";
-        for (var i = 0; i < inChoices.length; i++) {
-            strChoices += encodeURIComponent(inChoices[i]);
-            if (i < inChoices.length - 1) {
-                strChoices += ";";
-            }
+        title = encodeURIComponent($("#input-title").val());
+        choices = $("#choices").val();
+        choices = choices.split("\n");
+        for (var i = 0; i < choices.length; i++) {
+            choices[i] = encodeURIComponent(choices[i]);
         }
         $.get("/code", function (res) {
             code = res;
-            connectWS();
+            connectWS(sendChoices);
         });
     });
 
     $("#roll").click(function () {
-        ws.send("r:roll");
+        sendRoll();
         $("#roll").prop("disabled", true);
     });
 });
 
-function connectWS() {
+function connectWS(onopen) {
     ws = new WebSocket("wss://" + location.host + "/ws/" + code);
     ws.onmessage = processCommand;
-    ws.onopen = sendChoices;
+    if (onopen) ws.onopen = onopen;
+}
+
+function sendRoll(){
+    var msg = {type:"r"};
+    msg.value = "roll";
+    ws.send(JSON.stringify(msg));
 }
 
 function sendChoices() {
-    if(strChoices && strChoices != "") {
-        ws.send(strChoices);
-        location.pathname = code;
-    }
+    var msg = { type: "c" };
+    msg.value = { title: title, choices: choices };
+    ws.send(JSON.stringify(msg));
+    location.pathname = code;
 }
 
 function setJoiners(amount) {
@@ -54,24 +57,27 @@ function setJoiners(amount) {
 }
 
 function processCommand(msg) {
-    var command = msg.data.split(":");
-    switch (command[0]) {
+    msg = JSON.parse(msg.data);
+    switch (msg.type) {
         case "r":
             $("#roll").prop("disabled", true);
-            result = command[1].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            result = msg.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             animateResult();
             break;
         case "c":
-            setChoices(command[1]);
+            setChoices(msg.value);
             break;
         case "j":
-            setJoiners(command[1]);
+            setJoiners(msg.value);
+            break;
+        case "e":
+            console.error(msg.value);
     }
 }
 
-function setChoices(command) {
-    command = command.split(";");
-    processLargeArrayAsync(command, function (choice) {
+function setChoices(value) {
+    $("#title").html(decodeURIComponent(value.title).replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+    processLargeArrayAsync(value.choices, function (choice) {
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         choices.push(choice);
@@ -87,7 +93,7 @@ function initSlotmachine() {
     };
     machine = $("#slotmachine").slotMachine(params);
     var height = 2.9 * choices.length;
-    $("#slotmachine").css("height", height+"ex");
+    $("#slotmachine").css("height", height + "ex");
 }
 
 function animateResult() {
@@ -96,9 +102,9 @@ function animateResult() {
     machine.setRandomize(function () {
         return index;
     });
-    setTimeout(function() {
+    setTimeout(function () {
         machine.shuffle();
-    },1000);
+    }, 1000);
     setTimeout(function () {
         machine.stop();
         $("#roll").prop("disabled", false);
