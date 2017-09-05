@@ -78,7 +78,7 @@ function processCommand(msg) {
 function setChoices(value) {
     var title = decodeURIComponent(value.title);
     $("#title").html(title.replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-    $("head").append("<title>" + title + "</title>")
+    $("title").html(title);
     processLargeArrayAsync(value.choices, function (choice) {
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");
