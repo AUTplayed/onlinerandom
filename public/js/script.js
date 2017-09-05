@@ -39,8 +39,8 @@ function connectWS(onopen) {
     if (onopen) ws.onopen = onopen;
 }
 
-function sendRoll(){
-    var msg = {type:"r"};
+function sendRoll() {
+    var msg = { type: "r" };
     msg.value = "roll";
     ws.send(JSON.stringify(msg));
 }
@@ -76,7 +76,9 @@ function processCommand(msg) {
 }
 
 function setChoices(value) {
-    $("#title").html(decodeURIComponent(value.title).replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+    var title = decodeURIComponent(value.title);
+    $("#title").html(title.replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+    $("head").append("<title>" + title + "</title>")
     processLargeArrayAsync(value.choices, function (choice) {
         choice = decodeURIComponent(choice);
         choice = choice.replace(/</g, "&lt;").replace(/>/g, "&gt;");

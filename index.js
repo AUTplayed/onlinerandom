@@ -24,7 +24,7 @@ app.ws("/ws/:code", function (ws, req) {
     var code = req.params.code;
     if (users[code] === undefined) {
         users[code] = [];
-        setTimeout(function () { clearData(code); }, 1000 * 60 * 60);
+        setTimeout(function () { clearData(code); }, 1000 * 60 * 60 * 24);
     } else {
         users[code].push(ws);
         sendJoined(code);
